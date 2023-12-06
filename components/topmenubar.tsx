@@ -5,15 +5,21 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
+import { Icon, SvgIcon} from '@mui/material';
+//import CustomIcon from '../src/app/favicon.ico'; // Replace with the path to your SVG file
+
 
 const TopMenuBar: React.FC = () => {
   return (
     <div>
       <AppBar position="fixed">
         <Toolbar>
+            <Icon color="inherit" aria-label="Icon">
+             CustomIcon
           <Typography variant="h6" style={{ flexGrow: 1 }}>
-            Your App Name
+            SFIC
           </Typography>
+          </Icon>
           <Button color="inherit">Home</Button>
           <Button color="inherit">Option 1</Button>
           <Button color="inherit">Option 2</Button>
