@@ -11,6 +11,7 @@ import IconButton from '@mui/material/IconButton';
 import { Icon } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu'; // Import an icon from @mui/icons-material
 import Favicon from 'react-favicon';
+import logo from './logo.png';
 
 const MenuBar: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -26,9 +27,8 @@ const MenuBar: React.FC = () => {
   return (
     <AppBar position="static">
       <Toolbar style={{ justifyContent: 'space-between' }}>
-        <Favicon url="/favicon.ico" />
         <Button color="inherit" aria-label="SFIC" onClick={handleClose}>
-            <Favicon url="./favicon.ico"/>
+          <img src={logo.src} alt="SFIC Logo" style={{ height: '40px', marginRight: '10px', marginBottom: '10px'}} /> 
         <Typography variant="h6" style={{ flexGrow: 1 }}>
             SFIC
         </Typography>
@@ -45,8 +45,8 @@ const MenuBar: React.FC = () => {
           onClose={handleClose}
         >
           <MenuItem onClick={handleClose}>Home</MenuItem>
-          <MenuItem onClick={handleClose}>Option 1</MenuItem>
-          <MenuItem onClick={handleClose}>Option 2</MenuItem>
+          <MenuItem onClick={handleClose}>Account</MenuItem>
+          <MenuItem onClick={handleClose}>Resources</MenuItem>
           <MenuItem onClick={handleClose}>Settings</MenuItem>
         </Menu>
       </Toolbar>
