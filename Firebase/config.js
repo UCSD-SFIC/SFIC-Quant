@@ -8,25 +8,16 @@ import {collection, addDoc} from "firebase/firestore"
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-// const firebaseConfig = {
-//   apiKey: process.env.API_KEY,
-//   authDomain: process.env.authDomain,
-//   projectId: process.env.projectId,
-//   storageBucket: process.env.NEXT_PUBLIC_STORAGE_BUCKET,
-//   messagingSenderId: process.env.NEXT_PUBLIC_MESSAGING_SENDER_ID,
-//   appId: process.env.NEXT_PUBLIC_APP_ID,
-//   measurementId: process.env.NEXT_PUBLIC_MEASUREMENT_ID
-// };
-
 const firebaseConfig = {
-    apiKey: "AIzaSyAFNANuy4u5ui0_e9YsWTpG3W7Bkq9HVd8",
-    authDomain: "sfic-quant-platform.firebaseapp.com",
-    projectId: "sfic-quant-platform",
-    storageBucket: "sfic-quant-platform.appspot.com",
-    messagingSenderId: "445774300790",
-    appId: "1:445774300790:web:605bf064640dac272b0157",
-    measurementId: "G-S74H2RP292"
-  };
+  apiKey: process.env.API_KEY,
+  authDomain: process.env.authDomain,
+  projectId: process.env.projectId,
+  storageBucket: process.env.NEXT_PUBLIC_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_MEASUREMENT_ID
+};
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
