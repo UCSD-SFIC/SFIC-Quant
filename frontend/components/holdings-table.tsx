@@ -20,6 +20,11 @@ import Switch from '@mui/material/Switch';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import SearchIcon from '@mui/icons-material/Search';
 
 interface Data {
   id: number;
@@ -123,6 +128,12 @@ const headCells: readonly HeadCell[] = [
     numeric: true,
     disablePadding: false,
     label: 'Type',
+  },
+  {
+    id: 'initial_value',
+    numeric: true,
+    disablePadding: false,
+    label: 'Initial Price',
   },
   {
     id: 'market_value',
@@ -255,6 +266,7 @@ export default function HoldingsTable() {
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [searchText, setSearchText] = React.useState('');
 
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
@@ -312,6 +324,7 @@ export default function HoldingsTable() {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
+  /*
   const visibleRows = React.useMemo(
     () =>
       stableSort(rows, getComparator(order, orderBy)).slice(
@@ -320,10 +333,33 @@ export default function HoldingsTable() {
       ),
     [order, orderBy, page, rowsPerPage],
   );
+  */
+
+  const visibleRows = React.useMemo(
+    () =>
+      stableSort(rows.filter(row => row.ticker.toLowerCase().includes(searchText.toLowerCase())), getComparator(order, orderBy))
+      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [order, orderBy, page, rowsPerPage, searchText],
+  );
 
   return (
     <Box sx={{ width: '100%' }}>
       <Paper sx={{ width: '100%', mb: 2 }}>
+        <Box sx={{ p: 2 }}>
+          <TextField
+            label="Search by Ticker"
+            variant="outlined"
+            fullWidth
+            onChange={(e) => setSearchText(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
         <EnhancedTableToolbar numSelected={selected.length} />
         <TableContainer>
           <Table
@@ -374,8 +410,15 @@ export default function HoldingsTable() {
                     </TableCell>
                     <TableCell align="right">{row.quantity}</TableCell>
                     <TableCell align="right">{row.security_type}</TableCell>
-                    <TableCell align="right">{row.market_value}</TableCell>
-                    <TableCell align="right">{row.pnl}</TableCell>
+                    <TableCell align="right">{row.initial_value.toFixed(2)}</TableCell>
+                    <TableCell align="right">{row.market_value.toFixed(2)}</TableCell>
+                    <TableCell align="right">{row.pnl.toFixed(2)} {/* 2 decimal places*/}
+                    {row.pnl > 0 ? (
+                      <ArrowUpwardIcon style={{ color: 'green', verticalAlign: 'middle' }} />
+                    ) : row.pnl < 0 ? (
+                      <ArrowDownwardIcon style={{ color: 'red', verticalAlign: 'middle' }} />
+                    ) : null}
+                  </TableCell>
                   </TableRow>
                 );
               })}
