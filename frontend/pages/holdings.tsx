@@ -1,9 +1,10 @@
 import HoldingsTable from "../components/holdings-table"
+import TopBar from "../components/topbar"
 
 export default function Holdings() {
   return (
     <div>
-      Current Holdings
+      <TopBar/>
       <HoldingsTable/>
     </div>
   )
