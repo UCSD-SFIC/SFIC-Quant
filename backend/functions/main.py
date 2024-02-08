@@ -14,5 +14,5 @@ def on_request_example(req: https_fn.Request) -> https_fn.Response:
     holdings = firestore_client.collection("holdings").stream()
     holdings_data = []
     for holding in holdings:
-        holdings_data.append(holding)
-    return https_fn.Response(str(holdings_data[0]))
+        holdings_data.append(holding.to_dict())
+    return https_fn.Response(str(holdings_data))
