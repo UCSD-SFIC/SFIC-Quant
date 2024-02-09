@@ -152,14 +152,14 @@ const headCells: readonly HeadCell[] = [
 interface EnhancedTableProps {
   numSelected: number;
   onRequestSort: (event: React.MouseEvent<unknown>, property: keyof Data) => void;
-  onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  //onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void;
   order: Order;
   orderBy: string;
   rowCount: number;
 }
 
 function EnhancedTableHead(props: EnhancedTableProps) {
-  const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } =
+  const { order, orderBy, numSelected, rowCount, onRequestSort } =
     props;
   const createSortHandler =
     (property: keyof Data) => (event: React.MouseEvent<unknown>) => {
@@ -168,22 +168,17 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 
   return (
     <TableHead>
-      <TableRow>
-        <TableCell padding="checkbox">
-          <Checkbox
-            color="primary"
-            indeterminate={numSelected > 0 && numSelected < rowCount}
-            checked={rowCount > 0 && numSelected === rowCount}
-            onChange={onSelectAllClick}
-            inputProps={{
-              'aria-label': 'select all desserts',
-            }}
-          />
-        </TableCell>
+      <TableRow sx={{
+          backgroundColor: '#AACCFF', // Example: a shade of blue or 'inherit'
+          // Place other styling options here as needed
+        }}>
         {headCells.map((headCell) => (
           <TableCell
+            sx={{
+              fontWeight: 'bold', // This makes the text bold
+            }}
             key={headCell.id}
-            align={headCell.numeric ? 'right' : 'left'}
+            align={'center' /*headCell.numeric 'right' ? 'left' */}
             padding={headCell.disablePadding ? 'none' : 'normal'}
             sortDirection={orderBy === headCell.id ? order : false}
           >
@@ -277,6 +272,7 @@ export default function HoldingsTable() {
     setOrderBy(property);
   };
 
+  /*
   const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
       const newSelected = rows.map((n) => n.id);
@@ -285,8 +281,9 @@ export default function HoldingsTable() {
     }
     setSelected([]);
   };
+  */
 
-  const handleClick = (event: React.MouseEvent<unknown>, id: number) => {
+  /*const handleClick = (event: React.MouseEvent<unknown>, id: number) => {
     const selectedIndex = selected.indexOf(id);
     let newSelected: readonly number[] = [];
 
@@ -304,6 +301,7 @@ export default function HoldingsTable() {
     }
     setSelected(newSelected);
   };
+  */
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
@@ -363,7 +361,7 @@ export default function HoldingsTable() {
         <EnhancedTableToolbar numSelected={selected.length} />
         <TableContainer>
           <Table
-            sx={{ minWidth: 750 }}
+            sx={{ minWidth: 750}}
             aria-labelledby="tableTitle"
             size={dense ? 'small' : 'medium'}
           >
@@ -371,7 +369,7 @@ export default function HoldingsTable() {
               numSelected={selected.length}
               order={order}
               orderBy={orderBy}
-              onSelectAllClick={handleSelectAllClick}
+              //onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
               rowCount={rows.length}
             />
@@ -383,24 +381,15 @@ export default function HoldingsTable() {
                 return (
                   <TableRow
                     hover
-                    onClick={(event) => handleClick(event, row.id)}
-                    role="checkbox"
+                    //onClick={(event) => handleClick(event, row.id)}
                     aria-checked={isItemSelected}
                     tabIndex={-1}
                     key={row.id}
                     selected={isItemSelected}
                     sx={{ cursor: 'pointer' }}
                   >
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={isItemSelected}
-                        inputProps={{
-                          'aria-labelledby': labelId,
-                        }}
-                      />
-                    </TableCell>
                     <TableCell
+                      align="center"
                       component="th"
                       id={labelId}
                       scope="row"
@@ -408,11 +397,29 @@ export default function HoldingsTable() {
                     >
                       {row.ticker}
                     </TableCell>
-                    <TableCell align="right">{row.quantity}</TableCell>
-                    <TableCell align="right">{row.security_type}</TableCell>
-                    <TableCell align="right">{row.initial_value.toFixed(2)}</TableCell>
-                    <TableCell align="right">{row.market_value.toFixed(2)}</TableCell>
-                    <TableCell align="right">{row.pnl.toFixed(2)} {/* 2 decimal places*/}
+                    <TableCell align="center">{row.quantity}</TableCell>
+                    <TableCell align="center">{row.security_type}</TableCell>
+                    <TableCell align="center">{'$'+row.initial_value.toFixed(2)}</TableCell>
+                    <TableCell align="center"
+                    sx={{
+                      color: (theme) =>
+                        row.pnl > 0
+                          ? theme.palette.success.main // Green for positive values
+                          : row.pnl < 0
+                          ? theme.palette.error.main // Red for negative values
+                          : theme.palette.text.primary, // Default text color for zero or undefined
+                    }}>
+                    {'$'+row.market_value.toFixed(2)}</TableCell>
+                    <TableCell align="center"
+                    sx={{
+                      color: (theme) =>
+                        row.pnl > 0
+                          ? theme.palette.success.main // Green for positive values
+                          : row.pnl < 0
+                          ? theme.palette.error.main // Red for negative values
+                          : theme.palette.text.primary, // Default text color for zero or undefined
+                    }}>
+                    {row.pnl > 0 ? '$'+row.pnl.toFixed(2) : '$('+(-row.pnl).toFixed(2)+')'} {/* 2 decimal places*/}
                     {row.pnl > 0 ? (
                       <ArrowUpwardIcon style={{ color: 'green', verticalAlign: 'middle' }} />
                     ) : row.pnl < 0 ? (
