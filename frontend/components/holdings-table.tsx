@@ -33,6 +33,10 @@ interface Data {
   security_type: string;
   market_value: number;
   initial_value: number;
+  change: number;
+  day_change: number;
+  cost: number;
+  exposure_percentage: number;
   pnl: number;
 }
 
@@ -43,9 +47,14 @@ function createData(
   security_type: string,
   market_value: number,
   initial_value: number,
+  change: number,
+  day_change: number,
+  exposure: number,
 ): Data {
   // Calculate pnl
   const pnl = (market_value - initial_value) * quantity;
+  const cost = initial_value * quantity;
+  const exposure_percentage = 100*exposure;
   return {
     id,
     ticker,
@@ -53,14 +62,19 @@ function createData(
     security_type,
     market_value,
     initial_value,
+    change,
+    day_change,
+    cost,
+    exposure_percentage,
     pnl,
   };
 }
 
-const rows = [
-  createData(1,'AAPL', 100, 'EQ', 100, 120),
-  createData(2,'GOOG', 100, 'EQ', 120, 116),
-  createData(3,'META', 100, 'EQ', 90, 67),
+const rows = [ //put Data into rows
+//   id ticker quantity security_type market_value initial_value change day_change exposure
+  createData(1,'AAPL', 169, 'EQ', 100, 120, 120, 120, 0.5),
+  createData(2,'GOOG', 200, 'EQ', 120, 116, 120, 120, 0.15),
+  createData(3,'META', 139, 'EQ', 90, 67, 120, 120, 0.35),
 ];
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
@@ -115,7 +129,7 @@ const headCells: readonly HeadCell[] = [
     id: 'ticker',
     numeric: false,
     disablePadding: true,
-    label: 'Ticker',
+    label: 'Equity',
   },
   {
     id: 'quantity',
@@ -130,22 +144,40 @@ const headCells: readonly HeadCell[] = [
     label: 'Type',
   },
   {
-    id: 'initial_value',
+    id: 'change',
     numeric: true,
     disablePadding: false,
-    label: 'Initial Price',
+    label: 'Price (Change)',
   },
   {
     id: 'market_value',
     numeric: true,
     disablePadding: false,
-    label: 'Current Price',
+    label: 'Market Price',
+  },
+  {
+    id: 'day_change',
+    numeric: true,
+    disablePadding: false,
+    label: 'Day Change',
+  },
+  {
+    id: 'cost',
+    numeric: true,
+    disablePadding: false,
+    label: 'Cost',
   },
   {
     id: 'pnl',
     numeric: true,
     disablePadding: false,
-    label: 'PNL',
+    label: 'Gain/Loss',
+  },
+  {
+    id: 'exposure_percentage',
+    numeric: true,
+    disablePadding: false,
+    label: '% of Account',
   },
 ];
 
@@ -397,9 +429,10 @@ export default function HoldingsTable() {
                     >
                       {row.ticker}
                     </TableCell>
-                    <TableCell align="center">{row.quantity}</TableCell>
-                    <TableCell align="center">{row.security_type}</TableCell>
-                    <TableCell align="center">{'$'+row.initial_value.toFixed(2)}</TableCell>
+                    <TableCell align="center">
+                      {row.quantity}</TableCell>
+                    <TableCell align="center">
+                      {row.security_type}</TableCell>
                     <TableCell align="center"
                     sx={{
                       color: (theme) =>
@@ -409,7 +442,29 @@ export default function HoldingsTable() {
                           ? theme.palette.error.main // Red for negative values
                           : theme.palette.text.primary, // Default text color for zero or undefined
                     }}>
-                    {'$'+row.market_value.toFixed(2)}</TableCell>
+                      {'$'+row.change.toFixed(2)}</TableCell>
+                    <TableCell align="center"
+                    sx={{
+                      color: (theme) =>
+                        row.pnl > 0
+                          ? theme.palette.success.main // Green for positive values
+                          : row.pnl < 0
+                          ? theme.palette.error.main // Red for negative values
+                          : theme.palette.text.primary, // Default text color for zero or undefined
+                    }}>
+                      {'$'+row.market_value.toFixed(2)}</TableCell>
+                    <TableCell align="center"
+                    sx={{
+                      color: (theme) =>
+                        row.pnl > 0
+                          ? theme.palette.success.main // Green for positive values
+                          : row.pnl < 0
+                          ? theme.palette.error.main // Red for negative values
+                          : theme.palette.text.primary, // Default text color for zero or undefined
+                    }}>
+                      {'$'+row.day_change.toFixed(2)}</TableCell>
+                    <TableCell align="center">
+                    {'$'+row.cost.toFixed(2)}</TableCell>
                     <TableCell align="center"
                     sx={{
                       color: (theme) =>
@@ -426,6 +481,8 @@ export default function HoldingsTable() {
                       <ArrowDownwardIcon style={{ color: 'red', verticalAlign: 'middle' }} />
                     ) : null}
                   </TableCell>
+                  <TableCell align="center">
+                    {row.exposure_percentage.toFixed(2)+ '%'}</TableCell>
                   </TableRow>
                 );
               })}
