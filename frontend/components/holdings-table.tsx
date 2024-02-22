@@ -75,6 +75,7 @@ const rows = [ //put Data into rows
   createData(1,'AAPL', 169, 'EQ', 100, 120, 120, 120, 0.5),
   createData(2,'GOOG', 200, 'EQ', 120, 116, 120, 120, 0.15),
   createData(3,'META', 139, 'EQ', 90, 67, 120, 120, 0.35),
+  createData(4,'BR S&P 500', 99, 'ETF', 256, 50, 120, -10, 0.35),
 ];
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
@@ -456,13 +457,19 @@ export default function HoldingsTable() {
                     <TableCell align="center"
                     sx={{
                       color: (theme) =>
-                        row.pnl > 0
+                        row.day_change > 0
                           ? theme.palette.success.main // Green for positive values
-                          : row.pnl < 0
+                          : row.day_change < 0
                           ? theme.palette.error.main // Red for negative values
                           : theme.palette.text.primary, // Default text color for zero or undefined
                     }}>
-                      {'$'+row.day_change.toFixed(2)}</TableCell>
+                      {row.day_change > 0 ? '$'+row.day_change.toFixed(2) : '$('+(-row.day_change).toFixed(2)+')'} {/* 2 decimal places*/}
+                    {row.day_change > 0 ? (
+                      <ArrowUpwardIcon style={{ color: 'green', verticalAlign: 'middle' }} />
+                    ) : row.day_change < 0 ? (
+                      <ArrowDownwardIcon style={{ color: 'red', verticalAlign: 'middle' }} />
+                    ) : null}
+                    </TableCell>
                     <TableCell align="center">
                     {'$'+row.cost.toFixed(2)}</TableCell>
                     <TableCell align="center"
