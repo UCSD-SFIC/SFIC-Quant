@@ -29,26 +29,17 @@ client = MongoClient(uri, server_api=ServerApi('1'),tlsCAFile=ca)
 db = client.Holdings
 holdings = db.Holdings
 def createHolding(name: str, current_quantity: int, reinvest_dividend: bool, security_type: str, ticker: str, transactions: List[Dict[str, Any]]): 
-    formatted_transactions = []
-
-    ##wouldn't need it for now but probably will need when
-    for transaction in transactions:
-        formatted_transaction = {
-            "change": transaction.get("change"),
-            "date": transaction.get("date"),
-            "price": transaction.get("price"),
-            "transaction_type": transaction.get("transaction_type")
-        }
-        formatted_transactions.append(formatted_transaction)
-    
+    if(holdings.find_one({"ticker": ticker})):
+       print("The database already has this ticket! Use updateHolding to edit it")
+       return
     holding = {
         "Name": name,
         "current_quantity": current_quantity,
         "reinvest_dividend": reinvest_dividend,
         "security_type": security_type,
         "ticker": ticker,
-        "transactions": formatted_transactions,
-        "active": True
+        "active": True,
+        "transactions": transactions
     }
     
     # Insert the document into the collection
@@ -57,9 +48,9 @@ def createHolding(name: str, current_quantity: int, reinvest_dividend: bool, sec
 
 
 #get one or more holdings by ticker
-def getHoldings(holdingNames):
-    for holdingName in holdingNames:
-      query = holdings.find_one({"Name": holdingName})
+def getHoldings(holdingTickers):
+    for holdingTicker in holdingTickers:
+      query = holdings.find_one({"ticker": holdingTicker})
       if "active" in query and query["active"]:
         print(query)
 
@@ -72,19 +63,29 @@ def getAllHoldings():
 ...
 
 #update one or more holdings by ticker   
-def updateHoldings(): 
-  print("!")
+def updateHoldings(holdingsToUpdate, fieldsToUpdate):
+  for holdingTicker in holdingsToUpdate:
+    query = {"ticker": holdingTicker}
+    result = holdings.update_one(query, {"$set":fieldsToUpdate})
 ...
-# remove one or more holdings by ticker
+# remove one or more holdings by ticker, meaning set to inactive
 def deleteHoldings(holdingsToDelete):
-    for holdingName in holdingsToDelete:
-      query = {"Name": holdingName}
+    for holdingTicker in holdingsToDelete:
+      query = {"ticker": holdingTicker}
       result = holdings.update_one(query, {"$set":{"active": False}})
 
 def reActivateHoldings(holdingsToReactivate):
-    for holdingName in holdingsToReactivate:
-      query = {"Name": holdingName}
+    for holdingTicker in holdingsToReactivate:
+      query = {"ticker": holdingTicker}
       result = holdings.update_one(query, {"$set":{"active": True}})
+
+
+def addTransactionToHolding(name: str, transaction: dict):
+    result = holdings.update_one(
+        {"ticker": name},  # Query to find the document by name
+        {"$push": {"transactions": transaction}}  # $push operation
+    )
+
 
 ##Test prints in here.
 def main():
@@ -95,8 +96,20 @@ def main():
       print(e)
   
   #getAllHoldings()
-  deleteHoldings(["GOOGL_TST"])
-  getHoldings(["GOOGL_TST", "APPL_TST"])
+  #reActivateHoldings(["GOOGL"])
+  #getHoldings(["GOOGL", "APPL"])
+
+  transaction = {
+    "change": 999,
+    "date": "99-99-2093",
+    "price": 999,
+    "transaction_type": "buy"
+  }
+  #addTransactionToHolding("GOOGL", transaction)
+  #getHoldings(["GOOGL"])
+
+  createHolding("Invesco QQQ Trust Series 1 Test", 20, False, "ETFs & Closed End Funds", "QQQ" ,[transaction])
+  getHoldings(["QQQ"])
 
 if __name__ == "__main__":
     main()
