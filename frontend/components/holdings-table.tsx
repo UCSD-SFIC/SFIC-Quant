@@ -20,48 +20,76 @@ import Switch from '@mui/material/Switch';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { visuallyHidden } from '@mui/utils';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import SearchIcon from '@mui/icons-material/Search';
 
 interface Data {
   id: number;
-  calories: number;
-  carbs: number;
-  fat: number;
-  name: string;
-  protein: number;
+  ticker: string;
+  quantity: number;
+  security_type: string;
+  market_value: number;
+  initial_value: number;
+  change: number;
+  day_change: number;
+  cost: number;
+  exposure_percentage: number;
+  pnl: number;
 }
 
 function createData(
   id: number,
-  name: string,
-  calories: number,
-  fat: number,
-  carbs: number,
-  protein: number,
+  ticker: string,
+  quantity: number,
+  security_type: string,
+  market_value: number,
+  initial_value: number,
+  change: number,
+  day_change: number,
+  exposure: number,
 ): Data {
+  const pnl = (market_value - initial_value) * quantity;
+  const cost = initial_value * quantity;
+  const exposure_percentage = 100*exposure;
   return {
     id,
-    name,
-    calories,
-    fat,
-    carbs,
-    protein,
+    ticker,
+    quantity,
+    security_type,
+    market_value,
+    initial_value,
+    change,
+    day_change,
+    cost,
+    exposure_percentage,
+    pnl,
   };
 }
 
-const rows = [
-  createData(1, 'Cupcake', 305, 3.7, 67, 4.3),
-  createData(2, 'Donut', 452, 25.0, 51, 4.9),
-  createData(3, 'Eclair', 262, 16.0, 24, 6.0),
-  createData(4, 'Frozen yoghurt', 159, 6.0, 24, 4.0),
-  createData(5, 'Gingerbread', 356, 16.0, 49, 3.9),
-  createData(6, 'Honeycomb', 408, 3.2, 87, 6.5),
-  createData(7, 'Ice cream sandwich', 237, 9.0, 37, 4.3),
-  createData(8, 'Jelly Bean', 375, 0.0, 94, 0.0),
-  createData(9, 'KitKat', 518, 26.0, 65, 7.0),
-  createData(10, 'Lollipop', 392, 0.2, 98, 0.0),
-  createData(11, 'Marshmallow', 318, 0, 81, 2.0),
-  createData(12, 'Nougat', 360, 19.0, 9, 37.0),
-  createData(13, 'Oreo', 437, 18.0, 63, 4.0),
+const rows = [ 
+
+//   id ticker quantity security_type market_value initial_value change day_change exposure
+
+// assuming change is total change in share price, and inital value is cost basis per share, then i notice 2 things
+// 1. change is a redundant parameter to pass in. (simply market_value - initial_value) (other redundants too)
+
+// 2. THE BUG IN SORTING IS FROM THE IMPOSSIBLE DATA. the previous example data supposed impossible situation such as initial 120, market 100, and change and daily change of 120. (given that the market is 100, daily change <=100, change <=120-100)
+
+// With real data this would not be a problem.
+
+// TODO: remove clutter functions and import them back in as needed
+// api/fetch new data pipeline: fetch data -> clean data -> pass data into createData (restructure for easier access?)
+
+//replaced with mathematically possible values:
+//we now see sorting w/ negatives works as intended
+//and our pnl matches up with quantity * change in price
+  createData(1,'AAPL', 169, 'EQ', 100, 120, -20, 20, 0.5),
+  createData(2,'GOOG', 200, 'EQ', 120, 116, 4, -10, 0.15),
+  createData(3,'META', 139, 'EQ', 90, 67, 23, 23, 0.35),
+  createData(4,'BR S&P 500', 99, 'ETF', 256, 50, 206, -10, 0.35),
 ];
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
@@ -88,10 +116,6 @@ function getComparator<Key extends keyof any>(
     : (a, b) => -descendingComparator(a, b, orderBy);
 }
 
-// Since 2020 all major browsers ensure sort stability with Array.prototype.sort().
-// stableSort() brings sort stability to non-modern browsers (notably IE11). If you
-// only support modern browsers you can replace stableSort(exampleArray, exampleComparator)
-// with exampleArray.slice().sort(exampleComparator)
 function stableSort<T>(array: readonly T[], comparator: (a: T, b: T) => number) {
   const stabilizedThis = array.map((el, index) => [el, index] as [T, number]);
   stabilizedThis.sort((a, b) => {
@@ -113,48 +137,71 @@ interface HeadCell {
 
 const headCells: readonly HeadCell[] = [
   {
-    id: 'name',
+    id: 'ticker',
     numeric: false,
     disablePadding: true,
-    label: 'Dessert (100g serving)',
+    label: 'Equity',
   },
   {
-    id: 'calories',
+    id: 'quantity',
     numeric: true,
     disablePadding: false,
-    label: 'Calories',
+    label: 'Quantity',
   },
   {
-    id: 'fat',
+    id: 'security_type',
     numeric: true,
     disablePadding: false,
-    label: 'Fat (g)',
+    label: 'Type',
   },
   {
-    id: 'carbs',
+    id: 'change',
     numeric: true,
     disablePadding: false,
-    label: 'Carbs (g)',
+    label: 'Price (Change)',
   },
   {
-    id: 'protein',
+    id: 'market_value',
     numeric: true,
     disablePadding: false,
-    label: 'Protein (g)',
+    label: 'Market Price',
+  },
+  {
+    id: 'day_change',
+    numeric: true,
+    disablePadding: false,
+    label: 'Day Change',
+  },
+  {
+    id: 'cost',
+    numeric: true,
+    disablePadding: false,
+    label: 'Cost',
+  },
+  {
+    id: 'pnl',
+    numeric: true,
+    disablePadding: false,
+    label: 'Gain/Loss',
+  },
+  {
+    id: 'exposure_percentage',
+    numeric: true,
+    disablePadding: false,
+    label: '% of Account',
   },
 ];
 
 interface EnhancedTableProps {
   numSelected: number;
   onRequestSort: (event: React.MouseEvent<unknown>, property: keyof Data) => void;
-  onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void;
   order: Order;
   orderBy: string;
   rowCount: number;
 }
 
 function EnhancedTableHead(props: EnhancedTableProps) {
-  const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } =
+  const { order, orderBy, numSelected, rowCount, onRequestSort } =
     props;
   const createSortHandler =
     (property: keyof Data) => (event: React.MouseEvent<unknown>) => {
@@ -163,22 +210,16 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 
   return (
     <TableHead>
-      <TableRow>
-        <TableCell padding="checkbox">
-          <Checkbox
-            color="primary"
-            indeterminate={numSelected > 0 && numSelected < rowCount}
-            checked={rowCount > 0 && numSelected === rowCount}
-            onChange={onSelectAllClick}
-            inputProps={{
-              'aria-label': 'select all desserts',
-            }}
-          />
-        </TableCell>
+      <TableRow sx={{
+          backgroundColor: '#AACCFF', 
+        }}>
         {headCells.map((headCell) => (
           <TableCell
+            sx={{
+              fontWeight: 'bold', 
+            }}
             key={headCell.id}
-            align={headCell.numeric ? 'right' : 'left'}
+            align={'center'}
             padding={headCell.disablePadding ? 'none' : 'normal'}
             sortDirection={orderBy === headCell.id ? order : false}
           >
@@ -235,7 +276,7 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
           id="tableTitle"
           component="div"
         >
-          Nutrition
+          Holdings Table
         </Typography>
       )}
       {numSelected > 0 ? (
@@ -256,11 +297,12 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
 }
 export default function HoldingsTable() {
   const [order, setOrder] = React.useState<Order>('asc');
-  const [orderBy, setOrderBy] = React.useState<keyof Data>('calories');
+  const [orderBy, setOrderBy] = React.useState<keyof Data>('id');
   const [selected, setSelected] = React.useState<readonly number[]>([]);
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
   const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [searchText, setSearchText] = React.useState('');
 
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
@@ -269,34 +311,6 @@ export default function HoldingsTable() {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
-  };
-
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      const newSelected = rows.map((n) => n.id);
-      setSelected(newSelected);
-      return;
-    }
-    setSelected([]);
-  };
-
-  const handleClick = (event: React.MouseEvent<unknown>, id: number) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected: readonly number[] = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1),
-      );
-    }
-    setSelected(newSelected);
   };
 
   const handleChangePage = (event: unknown, newPage: number) => {
@@ -318,22 +332,36 @@ export default function HoldingsTable() {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
+
   const visibleRows = React.useMemo(
     () =>
-      stableSort(rows, getComparator(order, orderBy)).slice(
-        page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage,
-      ),
-    [order, orderBy, page, rowsPerPage],
+      stableSort(rows.filter(row => row.ticker.toLowerCase().includes(searchText.toLowerCase())), getComparator(order, orderBy))
+      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage),
+    [order, orderBy, page, rowsPerPage, searchText],
   );
 
   return (
     <Box sx={{ width: '100%' }}>
       <Paper sx={{ width: '100%', mb: 2 }}>
+        <Box sx={{ p: 2 }}>
+          <TextField
+            label="Search by Ticker"
+            variant="outlined"
+            fullWidth
+            onChange={(e) => setSearchText(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
         <EnhancedTableToolbar numSelected={selected.length} />
         <TableContainer>
           <Table
-            sx={{ minWidth: 750 }}
+            sx={{ minWidth: 750}}
             aria-labelledby="tableTitle"
             size={dense ? 'small' : 'medium'}
           >
@@ -341,7 +369,6 @@ export default function HoldingsTable() {
               numSelected={selected.length}
               order={order}
               orderBy={orderBy}
-              onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
               rowCount={rows.length}
             />
@@ -353,35 +380,82 @@ export default function HoldingsTable() {
                 return (
                   <TableRow
                     hover
-                    onClick={(event) => handleClick(event, row.id)}
-                    role="checkbox"
                     aria-checked={isItemSelected}
                     tabIndex={-1}
                     key={row.id}
                     selected={isItemSelected}
                     sx={{ cursor: 'pointer' }}
                   >
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        color="primary"
-                        checked={isItemSelected}
-                        inputProps={{
-                          'aria-labelledby': labelId,
-                        }}
-                      />
-                    </TableCell>
                     <TableCell
+                      align="center"
                       component="th"
                       id={labelId}
                       scope="row"
                       padding="none"
                     >
-                      {row.name}
+                      {row.ticker}
                     </TableCell>
-                    <TableCell align="right">{row.calories}</TableCell>
-                    <TableCell align="right">{row.fat}</TableCell>
-                    <TableCell align="right">{row.carbs}</TableCell>
-                    <TableCell align="right">{row.protein}</TableCell>
+                    <TableCell align="center">
+                      {row.quantity}</TableCell>
+                    <TableCell align="center">
+                      {row.security_type}</TableCell>
+                    <TableCell align="center"
+                    sx={{
+                      color: (theme) =>
+                        row.pnl > 0
+                          ? theme.palette.success.main // Green for positive values
+                          : row.pnl < 0
+                          ? theme.palette.error.main // Red for negative values
+                          : theme.palette.text.primary, // Default text color for zero or undefined
+                    }}>
+                      {/** Style: 2 decimal places, () instead of - for money*/}
+                      {row.pnl > 0 ? '$'+row.change.toFixed(2) : '$('+(-row.change).toFixed(2)+')'}</TableCell>
+                    <TableCell align="center"
+                    sx={{
+                      color: (theme) =>
+                        row.pnl > 0
+                          ? theme.palette.success.main 
+                          : row.pnl < 0
+                          ? theme.palette.error.main 
+                          : theme.palette.text.primary, 
+                    }}>
+                      {'$'+row.market_value.toFixed(2)}</TableCell>
+                    <TableCell align="center"
+                    sx={{
+                      color: (theme) =>
+                        row.day_change > 0
+                          ? theme.palette.success.main 
+                          : row.day_change < 0
+                          ? theme.palette.error.main 
+                          : theme.palette.text.primary, 
+                    }}>
+                      {row.day_change > 0 ? '$'+row.day_change.toFixed(2) : '$('+(-row.day_change).toFixed(2)+')'}
+                    {row.day_change > 0 ? (
+                      <ArrowUpwardIcon style={{ color: 'green', verticalAlign: 'middle' }} />
+                    ) : row.day_change < 0 ? (
+                      <ArrowDownwardIcon style={{ color: 'red', verticalAlign: 'middle' }} />
+                    ) : null}
+                    </TableCell>
+                    <TableCell align="center">
+                    {'$'+row.cost.toFixed(2)}</TableCell>
+                    <TableCell align="center"
+                    sx={{
+                      color: (theme) =>
+                        row.pnl > 0
+                          ? theme.palette.success.main 
+                          : row.pnl < 0
+                          ? theme.palette.error.main 
+                          : theme.palette.text.primary, 
+                    }}>
+                    {row.pnl > 0 ? '$'+row.pnl.toFixed(2) : '$('+(-row.pnl).toFixed(2)+')'} 
+                    {row.pnl > 0 ? (
+                      <ArrowUpwardIcon style={{ color: 'green', verticalAlign: 'middle' }} />
+                    ) : row.pnl < 0 ? (
+                      <ArrowDownwardIcon style={{ color: 'red', verticalAlign: 'middle' }} />
+                    ) : null}
+                  </TableCell>
+                  <TableCell align="center">
+                    {row.exposure_percentage.toFixed(2)+ '%'}</TableCell>
                   </TableRow>
                 );
               })}
