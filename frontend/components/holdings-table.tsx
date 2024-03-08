@@ -51,7 +51,6 @@ function createData(
   day_change: number,
   exposure: number,
 ): Data {
-  // Calculate pnl
   const pnl = (market_value - initial_value) * quantity;
   const cost = initial_value * quantity;
   const exposure_percentage = 100*exposure;
@@ -70,12 +69,27 @@ function createData(
   };
 }
 
-const rows = [ //put Data into rows
+const rows = [ 
+
 //   id ticker quantity security_type market_value initial_value change day_change exposure
-  createData(1,'AAPL', 169, 'EQ', 100, 120, 120, 120, 0.5),
-  createData(2,'GOOG', 200, 'EQ', 120, 116, 120, 120, 0.15),
-  createData(3,'META', 139, 'EQ', 90, 67, 120, 120, 0.35),
-  createData(4,'BR S&P 500', 99, 'ETF', 256, 50, 120, -10, 0.35),
+
+// assuming change is total change in share price, and inital value is cost basis per share, then i notice 2 things
+// 1. change is a redundant parameter to pass in. (simply market_value - initial_value) (other redundants too)
+
+// 2. THE BUG IN SORTING IS FROM THE IMPOSSIBLE DATA. the previous example data supposed impossible situation such as initial 120, market 100, and change and daily change of 120. (given that the market is 100, daily change <=100, change <=120-100)
+
+// With real data this would not be a problem.
+
+// TODO: remove clutter functions and import them back in as needed
+// api/fetch new data pipeline: fetch data -> clean data -> pass data into createData (restructure for easier access?)
+
+//replaced with mathematically possible values:
+//we now see sorting w/ negatives works as intended
+//and our pnl matches up with quantity * change in price
+  createData(1,'AAPL', 169, 'EQ', 100, 120, -20, 20, 0.5),
+  createData(2,'GOOG', 200, 'EQ', 120, 116, 4, -10, 0.15),
+  createData(3,'META', 139, 'EQ', 90, 67, 23, 23, 0.35),
+  createData(4,'BR S&P 500', 99, 'ETF', 256, 50, 206, -10, 0.35),
 ];
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
@@ -102,10 +116,6 @@ function getComparator<Key extends keyof any>(
     : (a, b) => -descendingComparator(a, b, orderBy);
 }
 
-// Since 2020 all major browsers ensure sort stability with Array.prototype.sort().
-// stableSort() brings sort stability to non-modern browsers (notably IE11). If you
-// only support modern browsers you can replace stableSort(exampleArray, exampleComparator)
-// with exampleArray.slice().sort(exampleComparator)
 function stableSort<T>(array: readonly T[], comparator: (a: T, b: T) => number) {
   const stabilizedThis = array.map((el, index) => [el, index] as [T, number]);
   stabilizedThis.sort((a, b) => {
@@ -185,7 +195,6 @@ const headCells: readonly HeadCell[] = [
 interface EnhancedTableProps {
   numSelected: number;
   onRequestSort: (event: React.MouseEvent<unknown>, property: keyof Data) => void;
-  //onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void;
   order: Order;
   orderBy: string;
   rowCount: number;
@@ -202,16 +211,15 @@ function EnhancedTableHead(props: EnhancedTableProps) {
   return (
     <TableHead>
       <TableRow sx={{
-          backgroundColor: '#AACCFF', // Example: a shade of blue or 'inherit'
-          // Place other styling options here as needed
+          backgroundColor: '#AACCFF', 
         }}>
         {headCells.map((headCell) => (
           <TableCell
             sx={{
-              fontWeight: 'bold', // This makes the text bold
+              fontWeight: 'bold', 
             }}
             key={headCell.id}
-            align={'center' /*headCell.numeric 'right' ? 'left' */}
+            align={'center'}
             padding={headCell.disablePadding ? 'none' : 'normal'}
             sortDirection={orderBy === headCell.id ? order : false}
           >
@@ -305,37 +313,6 @@ export default function HoldingsTable() {
     setOrderBy(property);
   };
 
-  /*
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      const newSelected = rows.map((n) => n.id);
-      setSelected(newSelected);
-      return;
-    }
-    setSelected([]);
-  };
-  */
-
-  /*const handleClick = (event: React.MouseEvent<unknown>, id: number) => {
-    const selectedIndex = selected.indexOf(id);
-    let newSelected: readonly number[] = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, id);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selected.slice(1));
-    } else if (selectedIndex === selected.length - 1) {
-      newSelected = newSelected.concat(selected.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selected.slice(0, selectedIndex),
-        selected.slice(selectedIndex + 1),
-      );
-    }
-    setSelected(newSelected);
-  };
-  */
-
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
@@ -355,16 +332,6 @@ export default function HoldingsTable() {
   const emptyRows =
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
-  /*
-  const visibleRows = React.useMemo(
-    () =>
-      stableSort(rows, getComparator(order, orderBy)).slice(
-        page * rowsPerPage,
-        page * rowsPerPage + rowsPerPage,
-      ),
-    [order, orderBy, page, rowsPerPage],
-  );
-  */
 
   const visibleRows = React.useMemo(
     () =>
@@ -402,7 +369,6 @@ export default function HoldingsTable() {
               numSelected={selected.length}
               order={order}
               orderBy={orderBy}
-              //onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
               rowCount={rows.length}
             />
@@ -414,7 +380,6 @@ export default function HoldingsTable() {
                 return (
                   <TableRow
                     hover
-                    //onClick={(event) => handleClick(event, row.id)}
                     aria-checked={isItemSelected}
                     tabIndex={-1}
                     key={row.id}
@@ -443,27 +408,28 @@ export default function HoldingsTable() {
                           ? theme.palette.error.main // Red for negative values
                           : theme.palette.text.primary, // Default text color for zero or undefined
                     }}>
-                      {'$'+row.change.toFixed(2)}</TableCell>
+                      {/** Style: 2 decimal places, () instead of - for money*/}
+                      {row.pnl > 0 ? '$'+row.change.toFixed(2) : '$('+(-row.change).toFixed(2)+')'}</TableCell>
                     <TableCell align="center"
                     sx={{
                       color: (theme) =>
                         row.pnl > 0
-                          ? theme.palette.success.main // Green for positive values
+                          ? theme.palette.success.main 
                           : row.pnl < 0
-                          ? theme.palette.error.main // Red for negative values
-                          : theme.palette.text.primary, // Default text color for zero or undefined
+                          ? theme.palette.error.main 
+                          : theme.palette.text.primary, 
                     }}>
                       {'$'+row.market_value.toFixed(2)}</TableCell>
                     <TableCell align="center"
                     sx={{
                       color: (theme) =>
                         row.day_change > 0
-                          ? theme.palette.success.main // Green for positive values
+                          ? theme.palette.success.main 
                           : row.day_change < 0
-                          ? theme.palette.error.main // Red for negative values
-                          : theme.palette.text.primary, // Default text color for zero or undefined
+                          ? theme.palette.error.main 
+                          : theme.palette.text.primary, 
                     }}>
-                      {row.day_change > 0 ? '$'+row.day_change.toFixed(2) : '$('+(-row.day_change).toFixed(2)+')'} {/* 2 decimal places*/}
+                      {row.day_change > 0 ? '$'+row.day_change.toFixed(2) : '$('+(-row.day_change).toFixed(2)+')'}
                     {row.day_change > 0 ? (
                       <ArrowUpwardIcon style={{ color: 'green', verticalAlign: 'middle' }} />
                     ) : row.day_change < 0 ? (
@@ -476,12 +442,12 @@ export default function HoldingsTable() {
                     sx={{
                       color: (theme) =>
                         row.pnl > 0
-                          ? theme.palette.success.main // Green for positive values
+                          ? theme.palette.success.main 
                           : row.pnl < 0
-                          ? theme.palette.error.main // Red for negative values
-                          : theme.palette.text.primary, // Default text color for zero or undefined
+                          ? theme.palette.error.main 
+                          : theme.palette.text.primary, 
                     }}>
-                    {row.pnl > 0 ? '$'+row.pnl.toFixed(2) : '$('+(-row.pnl).toFixed(2)+')'} {/* 2 decimal places*/}
+                    {row.pnl > 0 ? '$'+row.pnl.toFixed(2) : '$('+(-row.pnl).toFixed(2)+')'} 
                     {row.pnl > 0 ? (
                       <ArrowUpwardIcon style={{ color: 'green', verticalAlign: 'middle' }} />
                     ) : row.pnl < 0 ? (
