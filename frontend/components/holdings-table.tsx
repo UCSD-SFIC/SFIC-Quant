@@ -24,7 +24,7 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
 import SearchIcon from "@mui/icons-material/Search";
-import { rows, Data } from "/constants/data";
+import { rows, Data } from "../constants/data";
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
