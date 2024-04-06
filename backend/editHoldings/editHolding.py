@@ -19,7 +19,7 @@ holdings = db.Holdings
 #Create one or more new holdings. Refer to schema from Github Issue Task 1: Holdings Schema #10
 def createHolding(name: str, current_quantity: int, reinvest_dividend: bool, security_type: str, ticker: str, transactions: List[Dict[str, Any]]): 
     if(holdings.find_one({"ticker": ticker})):
-       print("The database already has this ticket! Use updateHolding to edit it")
+       print("The database already has this ticker! Use updateHolding() to edit it")
        return
     holding = {
         "Name": name,
@@ -85,6 +85,5 @@ def main():
   except Exception as e:
       print(e)
   
-
 if __name__ == "__main__":
     main()
