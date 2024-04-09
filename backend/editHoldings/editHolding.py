@@ -11,7 +11,7 @@ ca = certifi.where()
 ##Rememeber to install all the right packages before working
 #Remember to set the mongo uri variable inside .env
 uri = os.getenv("uri")
-client = MongoClient(uri, server_api=ServerApi('1'),tlsCAFile=ca)
+client = MongoClient(uri, server_api=ServerApi('1'), tlsCAFile=ca)
 
 db = client.Holdings
 holdings = db.Holdings
@@ -33,8 +33,8 @@ def createHolding(name: str, current_quantity: int, reinvest_dividend: bool, sec
     
     # Insert the document into the collection
     result = holdings.insert_one(holding)
+    print("Inserted holding with ID: ", result.inserted_id)
     return result.inserted_id
-
 
 #Get one or more holdings by ticker
 def getHoldings(holdingTickers):
@@ -56,12 +56,14 @@ def updateHoldings(holdingsToUpdate, fieldsToUpdate):
   for holdingTicker in holdingsToUpdate:
     query = {"ticker": holdingTicker}
     result = holdings.update_one(query, {"$set":fieldsToUpdate})
-...
+  print("Updated {} holdings.", result.modified_count)
+  ...
 # Remove one or more holdings by ticker, meaning set to inactive
 def deleteHoldings(holdingsToDelete):
     for holdingTicker in holdingsToDelete:
       query = {"ticker": holdingTicker}
       result = holdings.update_one(query, {"$set":{"active": False}})
+    print("Deleted" , result.modified_count , "holdings.")
 
 #Re activate any holdings we have deleted(set active to False)
 def reActivateHoldings(holdingsToReactivate):
@@ -69,12 +71,15 @@ def reActivateHoldings(holdingsToReactivate):
       query = {"ticker": holdingTicker}
       result = holdings.update_one(query, {"$set":{"active": True}})
 
+    print("Reactivated ", result.modified_count , "holdings.")
+
 # Add any individual transactions to the holding
 def addTransactionToHolding(name: str, transaction: dict):
     result = holdings.update_one(
         {"ticker": name},  # Query to find the document by name
         {"$push": {"transactions": transaction}}  # $push operation
     )
+    print("Added transaction ", result.name, " to holding: ")
 
 
 ##Test anything in here.

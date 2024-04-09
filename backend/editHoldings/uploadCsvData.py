@@ -26,6 +26,17 @@ def uploadTransactions():
   for ind in range(1,len(transactions)):
     addTransactionToHolding(list(transactions[ind].keys())[0], list(transactions[ind].values())[0])
 
+def addFieldFromPositionsCsv(field):
+   positionsDF = pandas.read_csv(holdingsPath)
+   for ind in positionsDF.index:    
+    ticker = positionsDF["Symbol"][ind]
+    fieldData = positionsDF[field][ind]
+    # print(cost_basis)
+    holdings.update_one(
+        {"ticker": ticker},  # Query to find the document by name
+        {"$set": {field: fieldData}}  # adds field to doc
+    )
+
 def main():
   #Check server connection.
   try:
@@ -33,6 +44,8 @@ def main():
     print("Pinged your deployment. You successfully connected to MongoDB!")
   except Exception as e:
       print(e)
-      
+  addFieldFromPositionsCsv("Cost Basis")
+
+
 if __name__ == "__main__":
     main()
