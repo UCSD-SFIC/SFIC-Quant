@@ -72,3 +72,58 @@ export const rows = [
   createData(13, "BR NVDA", 99, "ETF", 256, 50, 206, -10, 0.35),
   createData(14, "BR Dow", 90, "ETF", 256, 50, 206, -10, 0.35),
 ];
+
+
+//TODO: In Real Data Version, This Section
+//Will go under its own component to handle error checking
+
+// Error Checking Logic
+// Part 1: Duplicate IDs in Data
+// TODO: as we add in data, develop/add additional error checking rules
+
+function checkForDuplicateIds(rows: Data[]) {
+  const seenIds = new Set<number>();
+  for (const row of rows) {
+    if (seenIds.has(row.id)) {
+      throw new Error(`Duplicate ID detected at: ${row.id}`);
+    }
+    seenIds.add(row.id);
+  }
+}
+
+// Part 2: Validate Data
+// tbh change is redundant, as it should always be change = market val - initial val
+
+function validateData(rows: Data[]) {
+  rows.forEach((row, index) => {
+    if (row.market_value <= 0) {
+      throw new Error(`Invalid market_value for ID ${row.id} at index ${index}: must be greater than 0.`);
+    }
+    if (row.initial_value <= 0) {
+      throw new Error(`Invalid initial_value for ID ${row.id} at index ${index}: must be greater than 0.`);
+    }
+    if (row.change !== row.market_value - row.initial_value) {
+      throw new Error(`Invalid change for ID ${row.id} at index ${index}: does not equal market_value - initial_value.`);
+    }
+    if (row.day_change > row.market_value) {
+      throw new Error(`Invalid day_change for ID ${row.id} at index ${index}: cannot be greater than market_value.`);
+    }
+  });
+}
+
+
+try {
+  checkForDuplicateIds(rows);
+  console.log("No Duplicate ID");
+} catch (error) {
+  console.error((error as Error).message);
+
+}
+
+try {
+  validateData(rows);
+  console.log("All data entries are valid.");
+} catch (error) {
+  console.error((error as Error).message);
+}
+
